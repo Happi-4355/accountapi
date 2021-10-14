@@ -1,0 +1,80 @@
+#%RAML 1.0
+title: accountapi
+version: v1
+
+
+
+
+/createAccount:
+  post:
+    body:
+      application/json:
+        example:
+                {
+                   "name": "mark",
+                   "mobileNo": "9000000004",
+                   "emailId": "mark@gmail.com"
+                  }
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                    {
+                       "statusCode": 201,
+                        "message": "Account Creted Successfuly"
+                      }
+/accountDetails:
+  get:   
+    queryParameters:
+      accountId:
+          example: '1001'
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                   [
+                      {
+                          "accountId": 1001,
+                          "dateOfBirth": null,
+                          "gender": null,
+                          "phone": "8000000001",
+                          "name": "john",
+                          "email": "john@gmail.com"
+                      }
+                  ]
+/udpateAccount:
+  patch:
+    queryParameters:
+       accountId:
+          example: '1001'
+    body:
+       application/json:
+        example:
+                {
+                   "mobileNo": "9000000004",
+                 }
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                    {
+                       "statusCode": 201,
+                        "message": "Account updated Successfuly"
+                      } 
+/deleteAccount:
+  delete:
+    queryParameters:
+       accountId:
+          example: '1001'
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                    {
+                       "statusCode": 201,
+                        "message": "Account updated Successfuly"
+                      }       

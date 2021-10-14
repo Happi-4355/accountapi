@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="eeb91e8a-5e5a-4eff-8e5c-4f4a7a63682c" >
+		<db:my-sql-connection host="${secure::db.Host}" port="${secure::db.port}" user="${secure::db.user}" password="${secure::db.password}" database="${secure::db.schema}" />
+	</db:config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="32d16a8a-5eab-4183-a832-1d1d99ab0d99" file="accountapi-secure-${ENV}.yaml" key="abcdefghijklmnop" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<flow name="createAccountFlow" doc:id="07ec1123-509e-4f89-8c2d-1e2c16baff20" initialState="started">
+		<logger level="INFO" doc:name="Logger" doc:id="d66d221d-d851-487c-b529-979f9f2a05d1" message="createAccountFlow starts............."/>
+		<db:insert doc:name="Insert" doc:id="6ae6587e-11f6-4761-ae42-71cc1f72f7a1" config-ref="Database_Config">
+			<db:sql ><![CDATA[
+insert into Account(name, phone, email) 
+values (:name, :phone, :email) ;
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+		name:payload.name,
+		phone:payload.mobileNo,
+		email:payload.emailId
+	}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="fe80107c-d1c1-4adb-9b6c-8c15d075dfae" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"created account succesfull"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="57d5a218-438b-45bb-b026-37ebe6d95350" message="final response..........#[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="7f3e892d-9a8e-4cb0-862c-87f5e40fd401" type="DB:BAD_SQL_SYNTAX, DB:CONNECTIVITY, DB:QUERY_EXECUTION, DB:RETRY_EXHAUSTED">
+				<ee:transform doc:name="Transform Message" doc:id="62454200-4612-4aaa-be98-b675bf5f334b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"msg":error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
